@@ -1,0 +1,22 @@
+services:
+  oltp:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: retail
+      # Read from .env (see .env.example); never commit the real value.
+      POSTGRES_PASSWORD: ${PGPASSWORD:?set PGPASSWORD in .env}
+      POSTGRES_DB: retail
+    ports:
+      # Loopback only, so the database is not reachable from other machines on the network.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - oltp-data:/var/lib/postgresql/data
+      - ./oltp/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U retail -d retail"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  oltp-data:
